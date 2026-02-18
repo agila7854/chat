@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Emotion Care Voice Chatbot 💖</title>
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:'Poppins',sans-serif;
+}
+
+body{
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:linear-gradient(135deg,#1f4037,#99f2c8);
+  overflow:hidden;
+}
+
+/* FLOATING EMOJIS */
+.emoji{
+  position:absolute;
+  font-size:30px;
+  animation:float 6s linear infinite;
+  opacity:0.8;
+}
+@keyframes float{
+  0%{transform:translateY(100vh);opacity:0;}
+  50%{opacity:1;}
+  100%{transform:translateY(-10vh);opacity:0;}
+}
+
+/* MAIN */
+.container{
+  width:95%;
+  max-width:1100px;
+  height:90vh;
+  display:flex;
+  background:rgba(255,255,255,0.15);
+  backdrop-filter:blur(15px);
+  border-radius:20px;
+  overflow:hidden;
+}
+
+/* CHAT */
+.chat-area{flex:2;display:flex;flex-direction:column;}
+.header{padding:15px;background:rgba(0,0,0,0.5);color:#fff;text-align:center;}
+.chat-box{flex:1;padding:15px;overflow-y:auto;}
+.bot,.user{max-width:80%;padding:12px;margin:8px 0;border-radius:15px;}
+.bot{background:#fff;}
+.user{background:#dcf8c6;align-self:flex-end;}
+
+.input-area{display:flex;padding:10px;background:#fff;}
+.input-area input{flex:1;padding:10px;border-radius:10px;border:1px solid #ccc;}
+.input-area button{margin-left:6px;padding:10px;border:none;border-radius:10px;background:#4CAF50;color:#fff;cursor:pointer;}
+
+/* SIDE */
+.side{flex:1;background:rgba(0,0,0,0.4);color:#fff;padding:15px;}
+.card{background:rgba(255,255,255,0.15);padding:15px;border-radius:15px;margin-bottom:15px;}
+.card button{width:100%;margin-top:6px;padding:8px;border:none;border-radius:10px;cursor:pointer;}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- CHAT -->
+<div class="chat-area">
+  <div class="header">
+    <h2>🤖 Emotion Care Chatbot</h2>
+    Mood Score: <span id="moodScore">50</span>
+  </div>
+
+  <div class="chat-box" id="chatBox">
+    <div class="bot">Hi 👋 Enna mood la irukka? (happy / sad / kovam / lonely)</div>
+  </div>
+
+  <div class="input-area">
+    <input id="userInput" placeholder="Type or speak..." />
+    <button onclick="sendMessage()">Send</button>
+    <button onclick="startVoice()">🎤</button>
+  </div>
+</div>
+
+<!-- SIDE -->
+<div class="side">
+
+  <!-- QUIZ -->
+  <div class="card">
+    <h3>🧠 Mood Quiz</h3>
+    <p id="quizQ"></p>
+    <button onclick="checkQuiz(0)" id="q0"></button>
+    <button onclick="checkQuiz(1)" id="q1"></button>
+    <button onclick="checkQuiz(2)" id="q2"></button>
+  </div>
+
+  <!-- GAME -->
+  <div class="card">
+    <h3>🎯 Guess the Emotion</h3>
+    <p id="gameQ">I feel like 😢</p>
+    <button onclick="guessGame('happy')">Happy</button>
+    <button onclick="guessGame('sad')">Sad</button>
+    <button onclick="guessGame('angry')">Angry</button>
+  </div>
+
+</div>
+</div>
+
+<script>
+let chatBox=document.getElementById("chatBox");
+let moodScore=50;
+
+/* SPEAK */
+function speak(t){
+  let s=new SpeechSynthesisUtterance(t);
+  s.lang="en-IN";
+  window.speechSynthesis.speak(s);
+}
+function addMsg(t,type){
+  let d=document.createElement("div");
+  d.className=type;
+  d.innerText=t;
+  chatBox.appendChild(d);
+  chatBox.scrollTop=chatBox.scrollHeight;
+  if(type==="bot") speak(t);
+}
+
+/* SEND */
+function sendMessage(){
+  let i=document.getElementById("userInput");
+  let msg=i.value.trim().toLowerCase();
+  if(!msg) return;
+  addMsg(i.value,"user");
+  i.value="";
+  reply(msg);
+}
+
+/* TAMIL + TANGLISH SUPPORT */
+function reply(msg){
+  let r=[],emoji="🙂";
+
+  if(msg.includes("sad")||msg.includes("kastam")||msg.includes("romba kastama")){
+    moodScore-=5;emoji="😢";
+    r=["Kastama irundhaalum naan irukken 🤍","Nee thaniya illa","Ellam seri aagum","Konjam relax pannalaam"];
+  }
+  else if(msg.includes("happy")||msg.includes("super")||msg.includes("romba happy")){
+    moodScore+=5;emoji="😊";
+    r=["Super! semma happy","Un smile nalla irukku","Positive vibes","Enjoy pannunga"];
+  }
+  else if(msg.includes("kovam")||msg.includes("angry")){
+    moodScore-=3;emoji="😡";
+    r=["Kovam varum","Deep breath edunga","Calm aagalaam","Relax pannunga"];
+  }
+  else{
+    r=["Seri, continue pesunga","Naan kekkiren","Share pannunga","Naan irukken"];
+  }
+
+  document.getElementById("moodScore").innerText=moodScore;
+  emojiRain(emoji);
+  r.forEach((x,i)=>setTimeout(()=>addMsg(x,"bot"),i*700));
+}
+
+/* VOICE INPUT */
+function startVoice(){
+  let r=new(window.SpeechRecognition||window.webkitSpeechRecognition)();
+  r.lang="en-IN";
+  r.start();
+  r.onresult=e=>document.getElementById("userInput").value=e.results[0][0].transcript;
+}
+
+/* EMOJI */
+function emojiRain(e){
+  for(let i=0;i<5;i++){
+    let s=document.createElement("span");
+    s.className="emoji";s.innerText=e;
+    s.style.left=Math.random()*100+"vw";
+    document.body.appendChild(s);
+    setTimeout(()=>s.remove(),6000);
+  }
+}
+
+/* QUIZ SYSTEM */
+let quiz=[
+ {q:"Which emotion increases mood?",o:["Sad","Happy","Angry"],a:1},
+ {q:"When angry what helps?",o:["Shout","Deep breath","Cry"],a:1}
+];
+let qi=0;
+loadQuiz();
+
+function loadQuiz(){
+  let q=quiz[qi];
+  quizQ.innerText=q.q;
+  q.o.forEach((x,i)=>document.getElementById("q"+i).innerText=x);
+}
+function checkQuiz(i){
+  if(i===quiz[qi].a){
+    moodScore+=5;
+    addMsg("Correct answer 🎉","bot");
+  }else{
+    addMsg("Wrong answer 🙂","bot");
+  }
+  qi=(qi+1)%quiz.length;
+  document.getElementById("moodScore").innerText=moodScore;
+  loadQuiz();
+}
+
+/* GAME */
+function guessGame(ans){
+  if(ans==="sad"){
+    addMsg("Correct! 😢","bot");
+    moodScore+=3;
+  }else{
+    addMsg("Wrong guess 😅","bot");
+    moodScore-=1;
+  }
+  document.getElementById("moodScore").innerText=moodScore;
+}
+</script>
+
+</body>
+</html>
